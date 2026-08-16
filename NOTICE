@@ -1,0 +1,44 @@
+myharness
+Copyright 2026 punkyade
+
+This product includes software originally developed as "Harness"
+by robin (revfactory).
+
+    Harness
+    Copyright 2025 robin
+    https://github.com/revfactory/harness
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+------------------------------------------------------------------------
+Modifications
+------------------------------------------------------------------------
+
+This is a fork of revfactory/harness (upstream v1.2.0). The following
+changes were made by punkyade and are NOT part of the upstream project:
+
+- Renamed the plugin to "myharness" and the marketplace to
+  "myharness-marketplace"; repointed all ownership, repository, and
+  support routing to punkyade/myharness.
+- Removed upstream's project-specific claims and marketing material,
+  including the A/B research results ("+60% average quality", n=15),
+  the associated paper citation (Hwang, M. 2026), the harness-100
+  catalog references, the ecosystem-positioning ("L3 Meta-Factory")
+  and coexistence sections, the Star History chart, and the FAQ.
+  These describe upstream's work and measurements, not this fork's.
+- Removed the marketing landing page (index.html) and its privacy
+  policy (privacy.html).
+- Simplified README (EN/KO/JA) and CONTRIBUTING for single-maintainer
+  use; removed response-time SLA commitments and the upstream
+  maintainer roster, which this fork cannot honor.
+- Fixed upstream documentation defects: inconsistent plugin install
+  commands, a broken link to a non-existent document, placeholder
+  links, SLA text citing a CI workflow that does not exist, and
+  missing tables of contents in two reference files.
+
+The core meta-skill content under skills/harness/ is substantially
+upstream's work, carried over with the documentation fixes noted above.

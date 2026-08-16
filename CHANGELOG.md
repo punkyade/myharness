@@ -2,19 +2,50 @@
 
 이 프로젝트는 [Semantic Versioning](https://semver.org/)을 따릅니다.
 
+`2.0.0` 이전 이력은 원본 프로젝트 [revfactory/harness](https://github.com/revfactory/harness)의 것이며, 참고용으로 보존합니다.
+
 ## [Unreleased]
 
-### Added
+## [2.0.0] - 2026-08-17
+
+**[revfactory/harness](https://github.com/revfactory/harness) v1.2.0에서 포크.** 원저작자 표기와 변경 내역 전문은 [`NOTICE`](NOTICE) 참조.
+
+메이저 버전을 올린 이유: 플러그인명과 마켓플레이스명이 바뀌어 설치 명령이 달라졌다. 기존 `harness@harness-marketplace` 사용자는 재설치가 필요하다.
+
+### Changed
+
+- **플러그인 개명** — `harness` → `myharness`, 마켓플레이스 `harness-marketplace` → `myharness-marketplace`. 원본과 동시에 설치해도 이름이 충돌하지 않는다. 스킬 호출은 `/myharness:harness`
+- **소유권·지원 경로 이전** — `plugin.json` author/homepage/repository, `marketplace.json` owner, 이슈 템플릿 assignee, 보안 신고 채널을 `punkyade/myharness`로 변경. 보안 신고는 개인 이메일 노출 대신 GitHub 비공개 취약점 신고를 사용
+- **README 3종(EN/KO/JA) 간소화** — 설치·요구사항·사용법·워크플로우·구조·산출물·예시만 남김
+- **CONTRIBUTING 축소** — 단일 관리자 저장소에 맞게 응답 시간 SLA 5항목과 원본 관리자 명단(4명) 제거. 지킬 수 없는 약속을 문서에 남기지 않는다
+- **`docs/experimental-dependency.md` 재작성** — 플래그가 필요한 기술적 이유와 시나리오별 영향만 유지. T+24/48/72h 대응 약속과 Monitoring SLA 표는 이 포크가 이행할 수 없으므로 삭제. 플래그 없이 서브 에이전트 모드로 쓰는 방법 추가
+
+### Removed
+
+- **원저자 고유 주장 일체** — A/B 연구 결과("+60%", n=15), 논문 인용(Hwang, M. 2026), `harness-100` 카탈로그 참조, L3 Meta-Factory 포지셔닝, Coexistence 비교표, FAQ, Star History 차트. 모두 원본 프로젝트의 작업과 측정치이며 이 포크의 것이 아니다
+- **랜딩 페이지** — `index.html`(1,418줄), `privacy.html`. 개인 운용 플러그인에 불필요하고 3개 국어 i18n 문자열 동기화 부담만 남는다
+
+### Fixed
+
+원본 v1.2.0에 있던 문서 결함 (포크 시점에 수정):
+
+- **설치 명령어 불일치** — 문서마다 4가지 형태로 갈려 있었다. `README_KO.md`/`README_JA.md`는 플러그인명이 누락된 `harness-marketplace`, `index.html`/`docs/quickstart.md`는 마켓플레이스명이 잘못된 `harness@harness` → 영문 README를 제외한 모든 경로에서 설치가 실패했다
+- **버전 정합성** — `CHANGELOG`에 `[1.2.1]` 릴리스 항목이 있으나 `plugin.json`·`marketplace.json`·README 뱃지 3종은 `1.2.0`에 머물러 있었다
+- **깨진 링크** — 저장소에 없는 `docs/show-hn-launch-kit.md` 링크, 닫히지 않은 괄호를 동반한 `[P-13](#)` 플레이스홀더
+- **미구현 CI 기반 SLA** — 존재하지 않는 `.github/workflows/nightly-compat.yml`을 근거로 탐지 트리거와 대응 시간을 공표하고 있었다
+- **reference 목차 누락** — SKILL.md가 규정한 "300줄 이상 reference에 목차 포함" 규칙을 `agent-design-patterns.md`·`team-examples.md`가 어기고 있었다
+
+### 미반영 (원본 `[Unreleased]`에서 승계)
+
 - 신규 에이전트/스킬 생성 전 중복 검토 단계 (Phase 3-0, Phase 4-0)
 - `references/agent-design-patterns.md` "에이전트 재사용 설계" 섹션
 - `references/skill-writing-guide.md` §9 "스킬 재사용 설계"
 
-### Changed
-- Phase 선택 매트릭스에 3-0/4-0 명시
-- Phase 2-3에 재사용 검토 단계 포인터 추가
-- 산출물 체크리스트에 재사용 검토 항목 2개 추가
+> 위 3건은 `skills/harness/`에 이미 반영되어 있으나 원본에서 릴리스되지 않은 상태로 승계했다.
 
 ---
+
+# 이하 원본 프로젝트(revfactory/harness) 이력
 
 ## [1.2.1] - 2026-04-18
 

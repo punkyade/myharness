@@ -1,14 +1,14 @@
 name: Question
-description: Ask a how-to or clarification question about Harness
+description: Ask a how-to or clarification question about myharness
 title: "[question] "
 labels: ["question", "needs-triage"]
 body:
   - type: markdown
     attributes:
       value: |
-        Questions are welcome. If your question is open-ended or invites discussion, [GitHub Discussions](https://github.com/revfactory/harness/discussions) is usually a better venue.
+        Questions are welcome. This is a single-maintainer fork, so replies are best-effort with no guaranteed turnaround.
 
-        We try to triage questions within 48h.
+        If your question is about the meta-skill itself rather than this fork, [the upstream project](https://github.com/revfactory/harness) may be a better venue.
 
   - type: textarea
     id: question

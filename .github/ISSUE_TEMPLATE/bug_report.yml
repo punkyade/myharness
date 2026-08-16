@@ -1,9 +1,9 @@
 name: Bug report
-description: Report a defect in Harness (unexpected behavior, crash, broken install, etc.)
+description: Report a defect in myharness (unexpected behavior, crash, broken install, etc.)
 title: "[bug] "
 labels: ["bug", "needs-triage"]
 assignees:
-  - revfactory
+  - punkyade
 body:
   - type: markdown
     attributes:

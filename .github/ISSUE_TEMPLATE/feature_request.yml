@@ -1,14 +1,14 @@
 name: Feature request
-description: Propose a new capability or enhancement for Harness
+description: Propose a new capability or enhancement for myharness
 title: "[feat] "
 labels: ["enhancement", "needs-discussion"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for the idea. Features take a bit of back-and-forth — please help us with the "why" before the "what".
+        Thanks for the idea. Features take a bit of back-and-forth — please help with the "why" before the "what".
 
-        For anything RFC-sized (new pattern family, runtime support, breaking API), consider starting in [GitHub Discussions](https://github.com/revfactory/harness/discussions) first.
+        Note: this is a single-maintainer fork, so there is no response-time commitment. If your idea would benefit everyone, consider proposing it to [the upstream project](https://github.com/revfactory/harness) too.
 
   - type: textarea
     id: problem
