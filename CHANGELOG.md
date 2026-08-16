@@ -6,6 +6,26 @@
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-08-17
+
+v2.0.0 태그 이후의 정리 작업. 스킬 동작에는 변화가 없다.
+
+### Removed
+
+- **참조 없는 이미지 3개** — `harness_icon.png`, `harness_social.png`, `harness_team.png`. `index.html` 삭제로 참조가 끊긴 파일들이다. README 3종이 쓰는 `harness_banner.png`는 유지
+- **`_workspace/` (6개 파일, 1,963줄)** — 원본의 내부 런치·마케팅 작업 디렉터리. 릴리스 감사 기록, Show HN 런치 계획, awesome-list 아웃리치 타겟 맵, 마케팅 카피. 원본의 런치 활동 기록이라 이 포크와 무관하다
+
+  v2.0.0에서 "원저자 고유 주장 제거"를 명시했으나 이 디렉터리가 `+60%` 주장을 13곳, `revfactory` 참조를 35곳, 원저자 로컬 경로(`/Users/robin/...`)를 19곳, 구 설치 명령(`/plugin install harness@harness`)을 4쌍 그대로 싣고 있어 문서가 자기모순 상태였다
+
+### Added
+
+- `.gitignore`에 `_workspace/`, `_workspace_prev/` 등록 — 하네스 실행 중 생성되는 중간 산출물(SKILL.md Phase 5-1 파일 기반 전달 규약)이 커밋되지 않도록 한다
+
+### Changed
+
+- NOTICE 변경 내역에 `_workspace/` 및 이미지 제거 반영
+- 버전 문자열 동기화: `plugin.json`, `marketplace.json`, README 뱃지 3종, `docs/experimental-dependency.md` 의존성 그래프
+
 ## [2.0.0] - 2026-08-17
 
 **[revfactory/harness](https://github.com/revfactory/harness) v1.2.0에서 포크.** 원저작자 표기와 변경 내역 전문은 [`NOTICE`](NOTICE) 참조.
