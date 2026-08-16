@@ -30,8 +30,13 @@ changes were made by punkyade and are NOT part of the upstream project:
   catalog references, the ecosystem-positioning ("L3 Meta-Factory")
   and coexistence sections, the Star History chart, and the FAQ.
   These describe upstream's work and measurements, not this fork's.
-- Removed the marketing landing page (index.html) and its privacy
-  policy (privacy.html).
+- Removed the marketing landing page (index.html), its privacy policy
+  (privacy.html), and unreferenced image assets.
+- Removed _workspace/ (1,963 lines), upstream's internal launch and
+  outreach working files — release audits, Show HN launch planning,
+  awesome-list outreach targets, and marketing copy. This material
+  documents upstream's own launch effort and has no bearing on this
+  fork; it also restated the "+60%" claims removed above.
 - Simplified README (EN/KO/JA) and CONTRIBUTING for single-maintainer
   use; removed response-time SLA commitments and the upstream
   maintainer roster, which this fork cannot honor.

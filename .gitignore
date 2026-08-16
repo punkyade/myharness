@@ -1,2 +1,6 @@
 .DS_Store
 .claude/
+
+# 하네스 실행 중 생성되는 중간 산출물 (SKILL.md Phase 5-1 파일 기반 전달 규약)
+_workspace/
+_workspace_prev/
