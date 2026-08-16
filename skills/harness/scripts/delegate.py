@@ -16,12 +16,19 @@
 타임아웃(2)은 재시도할 가치가 있지만, CLI 부재(3)는 몇 번을 재시도해도
 같은 결과다.
 
+알려진 한계:
+    agy 는 stdin 프롬프트를 지원하지 않아 짧은 프롬프트가 프로세스 명령줄에
+    남는다. 같은 머신의 다른 프로세스가 이를 조회할 수 있으므로, 비밀정보를
+    프롬프트에 넣지 마라. (codex 는 항상 stdin 을 쓴다. agy 도 프롬프트가
+    ARG_PROMPT_LIMIT 를 넘으면 파일 참조 방식으로 전환된다.)
+
 새 런타임 추가는 RUNTIMES 에 항목 하나를 더하는 것으로 끝난다.
 """
 
 from __future__ import annotations
 
 import argparse
+import locale
 import shutil
 import subprocess
 import sys
@@ -57,8 +64,18 @@ class _Parser(argparse.ArgumentParser):
         sys.exit(EXIT_RUNTIME_ERROR)
 
 
-def _codex_argv(a: argparse.Namespace, prompt: str, out: Path) -> list[str]:
-    """codex 는 -o 로 최종 메시지를 파일에 직접 쓴다."""
+# Windows CreateProcess 의 명령줄 상한은 32767 자이지만, cmd.exe 를 경유하는
+# .CMD shim 은 8191 자에서 끊긴다. 여유를 두고 이 값을 넘으면 프롬프트를
+# argv 로 넘기지 않는다.
+ARG_PROMPT_LIMIT = 6000
+
+
+def _codex_argv(a: argparse.Namespace, prompt: str, out: Path) -> tuple[list[str], str | None]:
+    """codex 는 -o 로 최종 메시지를 파일에 직접 쓴다.
+
+    프롬프트 자리에 '-' 를 주면 stdin 에서 읽으므로 길이 제한이 없다.
+    항상 stdin 을 쓴다 — 짧은 프롬프트에도 동작하고, 분기가 하나 줄어든다.
+    """
     argv = [
         "codex", "exec",
         "--sandbox", a.sandbox_codex,
@@ -71,30 +88,73 @@ def _codex_argv(a: argparse.Namespace, prompt: str, out: Path) -> list[str]:
         argv += ["-m", a.model]
     if a.schema:
         argv += ["--output-schema", str(a.schema)]
-    argv.append(prompt)
-    return argv
+    argv.append("-")
+    return argv, prompt
 
 
-def _agy_argv(a: argparse.Namespace, prompt: str, out: Path) -> list[str]:
-    """agy 는 stdout 으로 응답을 내보낸다 — 호출부가 캡처해 기록한다."""
-    argv = ["agy", "-p", prompt, "--output-format", a.output_format]
+def _agy_argv(a: argparse.Namespace, prompt: str, out: Path) -> tuple[list[str], str | None]:
+    """agy 는 stdout 으로 응답을 내보낸다 — 호출부가 캡처해 기록한다.
+
+    agy 는 stdin 프롬프트를 지원하지 않는다 (인자 없이 -p 를 주면 help 를
+    출력한다). 따라서 긴 프롬프트는 argv 상한에 걸린다. 이 경우 프롬프트
+    파일을 읽으라는 짧은 지시로 대체하고, 파일이 있는 디렉터리를 작업
+    공간에 추가한다 — agy 는 에이전트이므로 파일을 직접 읽을 수 있다.
+    """
+    argv = ["agy"]
+    extra_dir: Path | None = None
+
+    if len(prompt) > ARG_PROMPT_LIMIT:
+        pf = a.prompt_file.resolve()
+        argv += ["-p", (
+            f"Read the file at {pf} and follow the instructions in it exactly. "
+            f"Output only what those instructions ask for."
+        )]
+        extra_dir = pf.parent
+    else:
+        argv += ["-p", prompt]
+
+    argv += ["--output-format", a.output_format]
     if a.sandbox_agy:
         argv.append("--sandbox")
     if a.cwd:
         argv += ["--add-dir", str(a.cwd)]
+    if extra_dir and (not a.cwd or extra_dir != Path(a.cwd).resolve()):
+        argv += ["--add-dir", str(extra_dir)]
     if a.model:
         argv += ["--model", a.model]
     if a.schema:
         argv += ["--json-schema", str(a.schema)]
-    return argv
+    return argv, None
 
 
 # writes_out_itself: True 면 CLI 가 --out 파일을 직접 쓴다.
 # False 면 stdout 을 캡처해 이쪽에서 기록한다.
+# argv 빌더는 (argv, stdin_payload) 를 반환한다.
 RUNTIMES = {
     "codex": {"bin": "codex", "argv": _codex_argv, "writes_out_itself": True},
     "agy": {"bin": "agy", "argv": _agy_argv, "writes_out_itself": False},
 }
+
+
+def _decode(raw: bytes | str | None) -> str:
+    """서브프로세스 출력을 디코드한다.
+
+    Windows 콘솔 도구는 UTF-8 이 아니라 로케일 코드페이지(cp949 등)로
+    에러를 낸다. UTF-8 로만 디코드하면 진단 메시지가 깨져 실패 원인을
+    읽을 수 없다.
+    """
+    if raw is None:
+        return ""
+    if isinstance(raw, str):
+        return raw
+    for enc in ("utf-8", locale.getpreferredencoding(False), "cp949"):
+        if not enc:
+            continue
+        try:
+            return raw.decode(enc)
+        except (UnicodeDecodeError, LookupError):
+            continue
+    return raw.decode("utf-8", "replace")
 
 
 def fail(msg: str, code: int = EXIT_RUNTIME_ERROR) -> int:
@@ -147,12 +207,25 @@ def main() -> int:
     if not a.prompt_file.is_file():
         return fail(f"프롬프트 파일이 없다: {a.prompt_file}")
 
-    prompt = a.prompt_file.read_text(encoding="utf-8").strip()
+    # 파일 입출력 예외를 그대로 흘리면 traceback 과 함께 종료 코드 1 이
+    # 나온다. 1 은 이 스크립트의 규약에 없는 값이라 어댑터가 분류할 수 없다.
+    try:
+        prompt = a.prompt_file.read_text(encoding="utf-8").strip()
+    except (OSError, UnicodeDecodeError) as e:
+        return fail(f"프롬프트 파일을 읽을 수 없다 ({a.prompt_file}): {e}")
+
     if not prompt:
         return fail(f"프롬프트 파일이 비어 있다: {a.prompt_file}")
 
-    a.out.parent.mkdir(parents=True, exist_ok=True)
-    argv = spec["argv"](a, prompt, a.out)
+    try:
+        a.out.parent.mkdir(parents=True, exist_ok=True)
+        # 이전 실행의 산출물을 먼저 지운다. 남겨두면 런타임이 종료 코드 0 으로
+        # 끝나면서 출력 파일을 갱신하지 않았을 때, 아래 빈 응답 검사가 옛 내용을
+        # 읽고 성공으로 판정한다 — 낡은 결과가 새 결과로 둔갑한다.
+        a.out.unlink(missing_ok=True)
+    except OSError as e:
+        return fail(f"출력 경로를 준비할 수 없다 ({a.out}): {e}")
+    argv, stdin_payload = spec["argv"](a, prompt, a.out)
 
     # argv[0] 을 해석된 절대 경로로 바꾼다. Windows 에서 npm 전역 설치는
     # 확장자 없는 셸 shim 과 .CMD 가 함께 깔리는데, subprocess 는 PATHEXT 를
@@ -160,23 +233,21 @@ def main() -> int:
     argv[0] = resolved
 
     if a.dry_run:
+        via = "stdin" if stdin_payload is not None else "argv"
+        print(f"# 프롬프트 전달: {via} ({len(prompt)}자)")
         print(" ".join(repr(x) if " " in x else x for x in argv))
         return EXIT_OK
 
     try:
         proc = subprocess.run(
             argv,
+            input=stdin_payload.encode("utf-8") if stdin_payload is not None else None,
             capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
             timeout=a.timeout,
             cwd=str(a.cwd) if a.cwd else None,
         )
     except subprocess.TimeoutExpired as e:
-        partial = e.stdout or ""
-        if isinstance(partial, bytes):
-            partial = partial.decode("utf-8", "replace")
+        partial = _decode(e.stdout)
         if partial.strip() and not spec["writes_out_itself"]:
             a.out.write_text(partial, encoding="utf-8")
             return fail(f"{a.runtime}: {a.timeout}초 타임아웃 (부분 출력 기록됨)",
@@ -185,20 +256,27 @@ def main() -> int:
     except OSError as e:
         return fail(f"{a.runtime} 실행 실패: {e}")
 
+    stdout, stderr = _decode(proc.stdout), _decode(proc.stderr)
+
     if proc.returncode != 0:
-        detail = (proc.stderr or proc.stdout or "").strip()
+        detail = (stderr or stdout).strip()
         return fail(
             f"{a.runtime} 비정상 종료 (code={proc.returncode}): "
             f"{detail[:500] or '출력 없음'}"
         )
 
-    if not spec["writes_out_itself"]:
-        a.out.write_text(proc.stdout or "", encoding="utf-8")
+    try:
+        if not spec["writes_out_itself"]:
+            a.out.write_text(stdout, encoding="utf-8")
 
-    # 종료 코드 0 인데 빈 응답인 경우가 실제로 있다. 성공으로 흘려보내면
-    # 어댑터가 빈 결과를 유효한 산출물로 오인한다.
-    if not a.out.is_file() or not a.out.read_text(encoding="utf-8").strip():
-        return fail(f"{a.runtime}: 정상 종료했으나 응답이 비어 있다")
+        # 종료 코드 0 인데 빈 응답인 경우가 실제로 있다. 성공으로 흘려보내면
+        # 어댑터가 빈 결과를 유효한 산출물로 오인한다. 실행 전에 --out 을
+        # 지웠으므로, 여기서 파일이 없다는 것은 런타임이 아무것도 쓰지
+        # 않았다는 뜻이다.
+        if not a.out.is_file() or not a.out.read_text(encoding="utf-8").strip():
+            return fail(f"{a.runtime}: 정상 종료했으나 응답이 비어 있다")
+    except (OSError, UnicodeDecodeError) as e:
+        return fail(f"{a.runtime}: 결과를 기록·확인할 수 없다 ({a.out}): {e}")
 
     print(f"delegate: {a.runtime} -> {a.out}", file=sys.stderr)
     return EXIT_OK
