@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-2.0.1-brightgreen.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Version-2.1.0-brightgreen.svg" alt="Version">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License"></a>
   <img src="https://img.shields.io/badge/Claude_Code-Plugin-purple.svg" alt="Claude Code Plugin">
   <img src="https://img.shields.io/badge/Patterns-6_Architectures-orange.svg" alt="6 Architecture Patterns">
@@ -40,6 +40,8 @@ cp -r skills/harness ~/.claude/skills/harness
 
 このフラグがないと、チームベースの実行モードは単一エージェント実行にフォールバックします。[`docs/experimental-dependency.md`](docs/experimental-dependency.md) を参照。
 
+**任意 — マルチランタイムモード専用:** `codex` および／または `agy` が `PATH` にあり、認証済みであること。外部ランタイムでのクロス検証を明示的に要求したときにのみ呼び出され、他のモードはこれらなしで動作します。未インストールでも基本機能は損なわれません。
+
 ## 使い方
 
 Claude Code で次のようにトリガーします:
@@ -59,7 +61,7 @@ Phase 0: 現状監査（新規構築 / 既存拡張 / 運用・保守）
     ↓
 Phase 1: ドメイン分析
     ↓
-Phase 2: チームアーキテクチャ設計（エージェントチーム / サブエージェント / ハイブリッド）
+Phase 2: チームアーキテクチャ設計（チーム / サブ / ハイブリッド / マルチランタイム）
     ↓
 Phase 3: エージェント定義の生成（.claude/agents/）
     ↓
@@ -79,6 +81,7 @@ Phase 7: ハーネスの進化（フィードバック → 反映 → 変更履�
 | **エージェントチーム**（既定） | `TeamCreate` + `SendMessage` + `TaskCreate` | 2名以上の協業・調整が必要なとき |
 | **サブエージェント** | `Agent` ツールの直接呼び出し | 単発タスク、エージェント間通信が不要 |
 | **ハイブリッド** | Phase ごとに異なるモード | 例: 並列収集（サブ）→ 合意統合（チーム） |
+| **マルチランタイム**（任意） | ネイティブチーム + アダプターが外部 CLI（`codex`, `agy`）へ読み取り専用で委譲 | モデルの多様性が必要なクロス検証 — 明示的に要求したときのみ |
 
 ### アーキテクチャパターン
 
@@ -101,13 +104,16 @@ myharness/
 ├── skills/
 │   └── harness/
 │       ├── SKILL.md                    # メインスキル定義（Phase 0〜7）
-│       └── references/
-│           ├── agent-design-patterns.md   # 6つのアーキテクチャパターン
-│           ├── orchestrator-template.md   # オーケストレーターテンプレート
-│           ├── team-examples.md           # 実践的なチーム構成例 5種
-│           ├── skill-writing-guide.md     # スキル作成ガイド
-│           ├── skill-testing-guide.md     # テスト・評価の方法論
-│           └── qa-agent-guide.md          # QA エージェント統合ガイド
+│       ├── references/
+│       │   ├── agent-design-patterns.md   # 6つのアーキテクチャパターン
+│       │   ├── orchestrator-template.md   # オーケストレーターテンプレート（A〜D）
+│       │   ├── team-examples.md           # 実践的なチーム構成例 5種
+│       │   ├── skill-writing-guide.md     # スキル作成ガイド
+│       │   ├── skill-testing-guide.md     # テスト・評価の方法論
+│       │   ├── qa-agent-guide.md          # QA エージェント統合ガイド
+│       │   └── multi-runtime-guide.md     # 外部 CLI 統合（codex, agy）
+│       └── scripts/
+│           └── delegate.py             # 外部ランタイムへの委譲
 └── docs/
     ├── quickstart.md
     └── experimental-dependency.md

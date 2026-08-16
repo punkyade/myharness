@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-2.0.1-brightgreen.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Version-2.1.0-brightgreen.svg" alt="Version">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License"></a>
   <img src="https://img.shields.io/badge/Claude_Code-Plugin-purple.svg" alt="Claude Code Plugin">
   <img src="https://img.shields.io/badge/Patterns-6_Architectures-orange.svg" alt="6 Architecture Patterns">
@@ -40,6 +40,8 @@ cp -r skills/harness ~/.claude/skills/harness
 
 이 플래그가 없으면 팀 기반 실행 모드가 단일 에이전트 실행으로 폴백됩니다. [`docs/experimental-dependency.md`](docs/experimental-dependency.md) 참조.
 
+**선택 — 멀티런타임 모드 전용:** `codex` 및/또는 `agy`가 `PATH`에 있고 인증되어 있어야 합니다. 사용자가 외부 런타임으로 교차 검증을 명시적으로 요청할 때만 호출되며, 나머지 모드는 이들 없이 정상 동작합니다. 설치되어 있지 않아도 기본 기능이 저하되지 않습니다.
+
 ## 사용법
 
 Claude Code에서 다음과 같이 트리거합니다:
@@ -59,7 +61,7 @@ Phase 0: 현황 감사 (신규 구축 / 기존 확장 / 운영·유지보수)
     ↓
 Phase 1: 도메인 분석
     ↓
-Phase 2: 팀 아키텍처 설계 (에이전트 팀 / 서브 에이전트 / 하이브리드)
+Phase 2: 팀 아키텍처 설계 (에이전트 팀 / 서브 / 하이브리드 / 멀티런타임)
     ↓
 Phase 3: 에이전트 정의 생성 (.claude/agents/)
     ↓
@@ -79,6 +81,7 @@ Phase 7: 하네스 진화 (피드백 → 반영 → 변경 이력)
 | **에이전트 팀** (기본) | `TeamCreate` + `SendMessage` + `TaskCreate` | 2명 이상이 협업·조율해야 할 때 |
 | **서브 에이전트** | `Agent` 도구 직접 호출 | 단발 작업, 에이전트 간 통신 불필요 |
 | **하이브리드** | Phase마다 다른 모드 | 예: 병렬 수집(서브) → 합의 통합(팀) |
+| **멀티런타임** (선택) | 네이티브 팀 + 어댑터가 외부 CLI(`codex`, `agy`)에 읽기 전용 위임 | 모델 다양성이 필요한 교차 검증 — 명시적으로 요청할 때만 |
 
 ### 아키텍처 패턴
 
@@ -101,13 +104,16 @@ myharness/
 ├── skills/
 │   └── harness/
 │       ├── SKILL.md                    # 메인 스킬 정의 (Phase 0~7)
-│       └── references/
-│           ├── agent-design-patterns.md   # 6가지 아키텍처 패턴
-│           ├── orchestrator-template.md   # 오케스트레이터 템플릿
-│           ├── team-examples.md           # 실전 팀 구성 예시 5종
-│           ├── skill-writing-guide.md     # 스킬 작성 가이드
-│           ├── skill-testing-guide.md     # 테스트·평가 방법론
-│           └── qa-agent-guide.md          # QA 에이전트 통합 가이드
+│       ├── references/
+│       │   ├── agent-design-patterns.md   # 6가지 아키텍처 패턴
+│       │   ├── orchestrator-template.md   # 오케스트레이터 템플릿 (A~D)
+│       │   ├── team-examples.md           # 실전 팀 구성 예시 5종
+│       │   ├── skill-writing-guide.md     # 스킬 작성 가이드
+│       │   ├── skill-testing-guide.md     # 테스트·평가 방법론
+│       │   ├── qa-agent-guide.md          # QA 에이전트 통합 가이드
+│       │   └── multi-runtime-guide.md     # 외부 CLI 통합 (codex, agy)
+│       └── scripts/
+│           └── delegate.py             # 외부 런타임 위임
 └── docs/
     ├── quickstart.md
     └── experimental-dependency.md

@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-2.0.1-brightgreen.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Version-2.1.0-brightgreen.svg" alt="Version">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License"></a>
   <img src="https://img.shields.io/badge/Claude_Code-Plugin-purple.svg" alt="Claude Code Plugin">
   <img src="https://img.shields.io/badge/Patterns-6_Architectures-orange.svg" alt="6 Architecture Patterns">
@@ -40,6 +40,8 @@ cp -r skills/harness ~/.claude/skills/harness
 
 Without this flag the team-based execution modes fall back to single-agent execution. See [`docs/experimental-dependency.md`](docs/experimental-dependency.md).
 
+**Optional — multi-runtime mode only:** `codex` and/or `agy` on your `PATH`, authenticated. These are only invoked when you explicitly ask for cross-validation with an external runtime; every other mode works without them, and nothing degrades if they are absent.
+
 ## Usage
 
 Trigger it in Claude Code with prompts like:
@@ -59,7 +61,7 @@ Phase 0: Current-state audit (new build / extend / maintain)
     ↓
 Phase 1: Domain analysis
     ↓
-Phase 2: Team architecture design (agent teams vs subagents vs hybrid)
+Phase 2: Team architecture design (teams / subagents / hybrid / multi-runtime)
     ↓
 Phase 3: Agent definition generation (.claude/agents/)
     ↓
@@ -79,6 +81,7 @@ Phase 7: Harness evolution (feedback → revision → change log)
 | **Agent Teams** (default) | `TeamCreate` + `SendMessage` + `TaskCreate` | 2+ agents that need to coordinate |
 | **Subagents** | Direct `Agent` tool invocation | One-off tasks, no inter-agent communication |
 | **Hybrid** | Different mode per phase | e.g. parallel collection (sub) → consensus merge (team) |
+| **Multi-runtime** (opt-in) | Native team + adapter agents delegating to external CLIs (`codex`, `agy`) read-only | Cross-validation where model diversity matters — only when you ask for it |
 
 ### Architecture Patterns
 
@@ -101,13 +104,16 @@ myharness/
 ├── skills/
 │   └── harness/
 │       ├── SKILL.md                    # Main skill definition (Phase 0–7)
-│       └── references/
-│           ├── agent-design-patterns.md   # 6 architectural patterns
-│           ├── orchestrator-template.md   # Team/subagent orchestrator templates
-│           ├── team-examples.md           # 5 real-world team configurations
-│           ├── skill-writing-guide.md     # Skill authoring guide
-│           ├── skill-testing-guide.md     # Testing & evaluation methodology
-│           └── qa-agent-guide.md          # QA agent integration guide
+│       ├── references/
+│       │   ├── agent-design-patterns.md   # 6 architectural patterns
+│       │   ├── orchestrator-template.md   # Orchestrator templates (A–D)
+│       │   ├── team-examples.md           # 5 real-world team configurations
+│       │   ├── skill-writing-guide.md     # Skill authoring guide
+│       │   ├── skill-testing-guide.md     # Testing & evaluation methodology
+│       │   ├── qa-agent-guide.md          # QA agent integration guide
+│       │   └── multi-runtime-guide.md     # External CLI integration (codex, agy)
+│       └── scripts/
+│           └── delegate.py             # External runtime delegation
 └── docs/
     ├── quickstart.md
     └── experimental-dependency.md

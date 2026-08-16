@@ -34,7 +34,7 @@ Without this variable set in the shell that launches `claude`, generated teams f
 ## Dependency graph
 
 ```
-myharness (v2.0.1)
+myharness (v2.1.0)
   └── Agent Teams API (Claude Code)
         ├── TeamCreate            ← EXPERIMENTAL_AGENT_TEAMS=1
         ├── SendMessage           ← EXPERIMENTAL_AGENT_TEAMS=1
