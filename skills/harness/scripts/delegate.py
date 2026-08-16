@@ -89,21 +89,29 @@ def _which(name: str) -> str | None:
     """
     exts = [""]
     if os.name == "nt":
-        exts = [e for e in os.environ.get(
+        pathext = [e for e in os.environ.get(
             "PATHEXT", ".COM;.EXE;.BAT;.CMD").split(os.pathsep) if e]
-        if not name.lower().endswith(tuple(e.lower() for e in exts)):
-            exts = exts
+        if name.lower().endswith(tuple(e.lower() for e in pathext)):
+            exts = [""]          # 이미 확장자가 붙어 있다
         else:
-            exts = [""]
+            # PATHEXT 를 먼저 시도한다. npm 전역 설치는 확장자 없는 셸
+            # 스크립트와 .CMD 를 같은 디렉터리에 함께 깔아 두는데,
+            # 확장자 없는 쪽은 Windows 가 실행하지 못해 WinError 2 가 난다.
+            exts = [*pathext, ""]
 
     for entry in os.environ.get("PATH", os.defpath).split(os.pathsep):
-        if not entry:
-            continue  # 빈 항목은 cwd 를 뜻한다 — 건너뛴다
+        # 절대 경로가 아닌 항목은 전부 건너뛴다. 빈 문자열과 '.' 은 cwd 를
+        # 뜻하는데, 이 스크립트는 리뷰 대상 저장소를 cwd 로 두고 돌기 때문에
+        # 저장소가 커밋해 둔 codex.cmd 가 인증된 CLI 대신 실행된다.
+        # 이 머신의 PATH 에는 실제로 '.' 항목이 들어 있다 — 이론적 위험이
+        # 아니라 기본 시나리오다.
+        if not entry or not os.path.isabs(entry):
+            continue
         base = Path(entry)
         for ext in exts:
             cand = base / (name + ext)
             if cand.is_file() and os.access(cand, os.X_OK):
-                return str(cand)
+                return str(cand.resolve())
     return None
 
 
